@@ -1,0 +1,12 @@
+-- CreateEnum
+CREATE TYPE "UserRole" AS ENUM ('CLIENT', 'VENDOR', 'ADMIN');
+
+-- AlterTable
+ALTER TABLE "Post" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "accountVerified" BOOLEAN DEFAULT false,
+ADD COLUMN     "otpExpiresAt" TIMESTAMP(3),
+ADD COLUMN     "otpToken" TEXT,
+ADD COLUMN     "password" TEXT;
