@@ -13,6 +13,9 @@ userRoutes.get("/", async (context) => {
       id: true,
       email: true,
       name: true,
+      role: true,
+      image: true,
+      emailVerified: true,
       accountVerified: true,
     },
   });
