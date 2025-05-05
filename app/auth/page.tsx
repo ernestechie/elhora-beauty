@@ -11,27 +11,27 @@ import { useForm } from "react-hook-form";
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const { handleSubmit, register } = useForm<EmailRegistrationSchemaType>({
-    resolver: zodResolver(emailRegistrationSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
+  const { handleSubmit, register, reset } =
+    useForm<EmailRegistrationSchemaType>({
+      resolver: zodResolver(emailRegistrationSchema),
+      defaultValues: {
+        email: "",
+      },
+    });
 
   //
   const onSubmit = async (values: EmailRegistrationSchemaType) => {
-    console.log("Values -> ", values);
     try {
       setIsLoading(true);
 
-      const response = await signIn("credentials", {
+      const response = await signIn("email", {
         email: values.email,
-        password: values.password,
-        redirect: false,
+        callbackUrl: "/shop", // <- Set the redirect URL here
+        // redirect: false,
       });
 
       console.log("response -> ", response);
+      reset();
     } catch (error) {
       console.log("error -> ", error);
     } finally {
@@ -54,14 +54,7 @@ export default function AuthPage() {
           required
           className="p-3 border border-gray-300 outline-none block rounded-md"
         />
-        <input
-          {...register("password")}
-          type="password"
-          placeholder="Password"
-          id="password"
-          required
-          className="p-3 border border-gray-300 outline-none block rounded-md"
-        />
+
         <button
           disabled={isLoading}
           type="submit"
