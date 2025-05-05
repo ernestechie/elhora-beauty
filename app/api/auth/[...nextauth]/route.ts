@@ -1,41 +1,43 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "@/lib/prisma";
-import { compare } from "bcryptjs";
-import { omit } from "lodash";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import EmailProvider from "next-auth/providers/email";
 
-const handler = await NextAuth({
+const handler = NextAuth({
+  adapter: PrismaAdapter(prisma),
   providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" },
+    // Passwordless login with email & magic links
+    EmailProvider({
+      maxAge: 60 * 60 * 24 * 7, // 7 days expiry
+      server: {
+        host: process.env.EMAIL_SERVER_HOST,
+        port: process.env.EMAIL_SERVER_PORT,
+        auth: {
+          user: process.env.EMAIL_SERVER_USER,
+          pass: process.env.EMAIL_SERVER_PASSWORD,
+        },
       },
-      async authorize(credentials): Promise<any> {
-        const user = await prisma.user.findUnique({
-          where: { email: credentials?.email },
-        });
-
-        if (!user) return null;
-
-        const isValid = await compare(
-          String(credentials?.password),
-          String(user?.password)
-        );
-
-        if (!isValid) return null;
-
-        const userData = omit(user, ["otpToken", "otpExpiresAt", "password"]);
-
-        console.log("data -> ", { credentials, user: userData });
-
-        return userData;
-      },
+      from: process.env.EMAIL_FROM,
     }),
   ],
-  pages: { signIn: "/auth", error: "/auth", signOut: "/" },
+  pages: {
+    signIn: "/auth",
+    error: "/auth",
+    signOut: "/shop",
+    newUser: "/shop",
+    verifyRequest: "/verify-email",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  callbacks: {
+    async session({ session, user }) {
+      // This is what gets returned when we call the useSession hook from "next-auth/react"
+      return {
+        ...session,
+        id: user.id,
+        email: user.email,
+      };
+    },
+  },
 });
 
 export { handler as GET, handler as POST };
